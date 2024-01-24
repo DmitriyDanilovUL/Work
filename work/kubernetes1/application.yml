@@ -1,0 +1,76 @@
+#### Service AppFlask####
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask
+  labels:
+    app.name: flask
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.name: flask
+---
+##### Ingresss controller AppFlask ####
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name:  flask 
+  labels:
+    app.name: flask
+  # annotations:
+  #   nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+    - host: flask.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: flask
+                port:
+                  name: http
+
+---
+apiVersion: v1
+kind: Secret 
+metadata: 
+  name: appsecret
+data: 
+  POSTGRESQL_URL: cG9zdGdyZXNxbDovL3dvcmtlcjp3b3JrZXJAdGVzdDItcG9zdGdyZXNxbDo1NDMyL2Ri
+ #  DATABASE_DIALECT: postgresql
+---
+
+#### Deployment FlaskApp ####
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: flask
+#  namespace: "name02"
+  labels:
+    app.name: flask
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.name: flask
+  template:
+    metadata:
+      labels:
+        app.name: flask
+    spec:
+      containers:
+      - name: flask
+        image: name/image:0.1
+        ports:
+          - containerPort: 5000
+            name: http
+        envFrom:
+            - secretRef:
+               name: appsecret

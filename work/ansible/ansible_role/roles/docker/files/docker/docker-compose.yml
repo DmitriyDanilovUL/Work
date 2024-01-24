@@ -1,0 +1,16 @@
+version: '3.9'
+services:
+  flask_web:
+    container_name: app
+    build: ./app
+    ports:
+      - 5000:5000
+    restart: unless-stopped
+    env_file: ./app/.env-postgresql
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8888:8080
+

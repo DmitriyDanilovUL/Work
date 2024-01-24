@@ -1,0 +1,8 @@
+---
+# vars file for xxxxx
+db_user: worker
+db_password: worker
+db_name: db
+postgres_root_user: root
+postgres_root_pass: GQt5MTyVPuf9vsVWoWDT9YCn
+allow_world_readable_tmpfiles: true

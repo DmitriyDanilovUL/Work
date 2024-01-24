@@ -1,0 +1,10 @@
+---
+- name: Configure SERVER
+  hosts: all
+  become: True
+
+  roles:
+    - postgres
+    - nginx
+    - docker
+

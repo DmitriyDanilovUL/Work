@@ -1,0 +1,77 @@
+#### Service PostgresQL ####
+apiVersion: v1
+kind: Service
+metadata:
+ name: postgres
+ labels:
+   app  : postgres
+   owner: Xeon
+spec:
+  selector:
+    app: postgres
+  ports:
+   - port: 5432
+     targetPort: 5432
+     protocol: TCP
+     name: postgres
+  clusterIP: None
+---
+apiVersion: v1
+kind: Secret 
+metadata: 
+  name: postgres
+data: 
+  POSTGRESQL_URL: cG9zdGdyZXNxbDovL3dvcmtlcjp3b3JrZXJAcG9zdGdyZXM6NTQzMi9kYg==
+  POSTGRES_DB: ZGI=
+  POSTGRES_USER: d29ya2Vy
+  POSTGRES_PASSWORD: d29ya2Vy
+  PGDATA: L3Zhci9saWIvcG9zdGdyZXNxbC9kYXRh
+#  DATABASE_DIALECT: postgresql
+            
+---
+#### Database PostgresQL ####
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:14
+          envFrom:
+            - secretRef:
+               name: postgres
+          ports:
+            - containerPort: 5432
+              name: postgres
+          volumeMounts:
+            - name: pv-volume
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: pv-volume
+          persistentVolumeClaim:   
+            claimName: pgdata
+
+---
+#### Storoge PersistentVolumeClaim ####
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pgdata
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+

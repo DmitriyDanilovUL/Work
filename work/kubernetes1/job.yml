@@ -1,0 +1,21 @@
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrations
+#  namespace: "exercise-02"
+spec:
+  activeDeadlineSeconds: 120
+  template:
+    spec:
+      containers:
+      - name: migration
+        image: name/image:0.1
+        command: ["flask",  "db", "upgrade"]
+        envFrom:
+            - secretRef:
+               name: postgres
+      restartPolicy: Never
+  backoffLimit: 4
+
+

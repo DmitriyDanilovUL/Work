@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  
+  db:
+    env_file: ./.env-postgresql
+    container_name: postgresql
+    image: postgres:14
+    volumes:
+       - db:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U worker -d db'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  flask_web:
+    container_name: app
+ #   dockerfile: ./.docker/Dockerfile
+    build: ./
+
+    ports:
+      - 5000:5000
+    restart: always
+    depends_on:
+       db :
+        condition: service_healthy
+    env_file: ./.env-postgresql 
+#    command: bash -c "flask db upgrade && sleep 2 && gunicorn -w 4 --bind 0.0.0.0:5000 wsgi:api"
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8888:8080
+volumes:
+  db:

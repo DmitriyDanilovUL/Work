@@ -1,0 +1,54 @@
+variables:
+  IMAGE_REGISTRY: name/image
+  IMAGE_NAME: image
+  NEWIMAGE: "$IMAGE_NAME:$CI_COMMIT_SHORT_SHA"
+ # IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  DOCKER_TLS_CERTDIR: "/certs"
+#  DOCKER_DRIVER: overlay2
+stages:
+  - lint
+  - build
+  - deploy
+
+test_dockerfile:
+  stage: lint
+  image: docker:24
+  services:
+    - docker:dind
+  script:
+    - docker pull hadolint/hadolint
+    - docker run --rm -i hadolint/hadolint  < ./.deploy/docker/Dockerfile
+
+build_image:
+  stage: build
+  image: docker:24
+  services:
+    - docker:dind
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login --username $CI_REGISTRY_USER --password-stdin
+  script:
+    - docker build -t $IMAGE_NAME  -f ./.deploy/docker/Dockerfile .
+    - docker tag $IMAGE_NAME $IMAGE_REGISTRY:$CI_COMMIT_SHORT_SHA
+    - docker push $IMAGE_REGISTRY:$CI_COMMIT_SHORT_SHA
+
+  after_script:
+    - docker logout
+
+deploy_app:
+  stage: deploy
+  image: dtzar/helm-kubectl:3.13.3
+  script:
+    - echo test
+    - helm repo add bitnami https://charts.bitnami.com/bitnami
+    - helm repo update
+#    - echo $NEWIMAGE
+    - kubectl apply -f ./.deploy/kubernetes/ns.yml --validate=false
+    - helm upgrade --install test2 bitnami/postgresql  -f ./helm/helmvalve.yaml -n exercise-02
+    - echo " Start migration DB (Меняем образ по умолчанию , на образ из сборки)"
+    - sed -e 's/name:0.1/'$NEWIMAGE'/g' ./.deploy/kubernetes/job1.yml > job2.yml 
+    - cat job2.yml
+    - kubectl apply -f job2.yml -n name02 
+    - echo " Start Flask APP (Меняем образ по умолчанию , на образ из сборки)"
+    - sed -e 's/name:0.1/'$NEWIMAGE'/g' ./.deploy/kubernetes/application1.yml  > application2.yml 
+    - cat application2.yml
+    - kubectl apply -f application2.yml -n name02 

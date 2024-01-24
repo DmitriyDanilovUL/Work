@@ -1,0 +1,4 @@
+---
+db_user: worker
+db_password: worker
+db_name:  db

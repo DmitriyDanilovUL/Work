@@ -1,0 +1,35 @@
+---
+#- name: Install NGINX
+#  hosts: all
+#  become: true
+
+- name: Update apt repo and cache
+  apt: 
+    update_cache: yes
+    force_apt_get: yes
+    cache_valid_time: 3600
+
+- name: INSTALL  
+  apt:
+    name:
+      - wget
+      - nano
+      - tree
+      - nginx        
+    state: latest
+
+- name: Copy nginx config file
+  ansible.builtin.copy:
+    src: files/nginx.conf 
+    dest: /etc/nginx/sites-available/default
+
+- name: Enable configuration
+  file: 
+    dest: /etc/nginx/sites-enabled/default
+    src: /etc/nginx/sites-available/default
+    state:
+      link
+- name: restart nginx
+  service: 
+    name: nginx 
+    state: restarted

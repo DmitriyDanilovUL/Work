@@ -1,0 +1,46 @@
+---
+#- name: Install DOCKER
+#  hosts: all
+#  become: true
+
+- name: Update apt repo and cache
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+    cache_valid_time: 3600
+  
+- name: Install required packages
+  apt:
+    name:
+      - acl
+      - libpq-dev
+      - docker
+      - docker-compose
+      - python3
+      - python3-pip
+      - python3-psycopg2
+      - python3-setuptools
+      - virtualenv     
+    state: latest
+
+- name: Create folder
+  file:
+    path: /docker
+    mode: '0755'
+    state: directory
+
+- name: Copy APP to Server
+  ansible.builtin.copy:
+    src: ./docker
+    dest: /
+    mode: '0755'
+- name:  Server docker start
+  service:
+     name: docker
+     state: started
+     enabled: yes
+- name: Start docker-compose
+  become: true
+  shell:
+    chdir: /docker/
+    cmd: "sudo docker-compose up -d"

@@ -1,0 +1,9 @@
+---
+version: '3'
+services:
+  gitlab-runner:
+    image: 'gitlab/gitlab-runner:alpine3.18-bleeding'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config:/etc/gitlab-runner
+    restart: unless-stopped

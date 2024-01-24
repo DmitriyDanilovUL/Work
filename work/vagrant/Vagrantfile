@@ -1,0 +1,29 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+hosts = {
+  "VM1" => "192.168.56.10",
+#  "VM2" => "192.168.56.11"
+#  "VM3" => "192.168.56.12"
+}
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-vagrant.box"
+  hosts.each do |name, ip|
+    config.vm.define name do |machine|
+      machine.vm.network :private_network, ip: ip
+      machine.vm.provider "virtualbox" do |v|
+        v.name = name
+        v.gui = false
+        v.memory = "1024"
+        v.cpus = 1
+      end
+     end
+ end
+  
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "main.yml"
+
+  end
+
+end
